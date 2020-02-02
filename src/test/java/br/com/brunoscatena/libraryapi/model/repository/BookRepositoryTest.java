@@ -25,73 +25,71 @@ public class BookRepositoryTest {
     @Autowired
     BookRepository bookRepository;
 
-
     private Book createBook() {
-        return Book.builder().author("Bruno").title("As aventuras").isbn("1234").build();
+	return Book.builder().author("Bruno").title("As aventuras").isbn("1234").build();
     }
 
     @Test
     @DisplayName("Should return true when there is alreay a ISBN on database")
     public void returnTrueWhenIsbnExists() {
 
-        // arrange
-        String isbn = "1234";
-        Book book = Book.builder().author("Some One").title("Adventures").isbn(isbn).build();
-        entityManager.persistAndFlush(book);
+	// arrange
+	String isbn = "1234";
+	Book book = Book.builder().author("Some One").title("Adventures").isbn(isbn).build();
+	entityManager.persistAndFlush(book);
 
-        // act
-        boolean exists = this.bookRepository.existsByIsbn(isbn);
+	// act
+	boolean exists = this.bookRepository.existsByIsbn(isbn);
 
-        // assert
-        assertThat(exists).isTrue();
+	// assert
+	assertThat(exists).isTrue();
 
     }
 
     @Test
     @DisplayName("Should return false when there is no ISBN on database")
     public void returnFalseWhenIsbnDoesNotExists() {
-        // arrange
-        String isbn = "1234";
+	// arrange
+	String isbn = "1234";
 
-        // act
-        boolean exists = this.bookRepository.existsByIsbn(isbn);
+	// act
+	boolean exists = this.bookRepository.existsByIsbn(isbn);
 
-        // assert
-        assertThat(exists).isFalse();
+	// assert
+	assertThat(exists).isFalse();
     }
 
     @Test
     @DisplayName("Should find book by id")
     public void findByIdTest() {
 
-        Book book = createBook();
-        book = entityManager.persist(book);
-        Optional<Book> foundBook = bookRepository.findById(book.getId());
-        assertThat(foundBook.isPresent()).isTrue();
+	Book book = createBook();
+	book = entityManager.persist(book);
+	Optional<Book> foundBook = bookRepository.findById(book.getId());
+	assertThat(foundBook.isPresent()).isTrue();
 
     }
-
 
     @Test
     @DisplayName("Should save book")
     public void saveTest() {
-        Book savedBook = bookRepository.save(createBook());
-        assertThat(savedBook.getId()).isNotNull();
+	Book savedBook = bookRepository.save(createBook());
+	assertThat(savedBook.getId()).isNotNull();
     }
 
     @Test
     @DisplayName("Should delete book")
     public void deleteTest() {
 
-        Book savedBook = entityManager.persist(createBook());
+	Book savedBook = entityManager.persist(createBook());
 
-        Book foundBook = entityManager.find(Book.class, savedBook.getId());
+	Book foundBook = entityManager.find(Book.class, savedBook.getId());
 
-        bookRepository.delete(foundBook);
+	bookRepository.delete(foundBook);
 
-        Book deletedBook = entityManager.find(Book.class, savedBook.getId());
+	Book deletedBook = entityManager.find(Book.class, savedBook.getId());
 
-        assertThat(deletedBook).isNull();
+	assertThat(deletedBook).isNull();
 
     }
 

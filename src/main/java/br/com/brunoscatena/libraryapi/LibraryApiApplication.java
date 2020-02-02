@@ -10,11 +10,11 @@ public class LibraryApiApplication {
 
     @Bean
     public ModelMapper modelMapper() {
-        return new ModelMapper();
+	return new ModelMapper();
     }
 
-	public static void main(String[] args) {
-		SpringApplication.run(LibraryApiApplication.class, args);
-	}
+    public static void main(String[] args) {
+	SpringApplication.run(LibraryApiApplication.class, args);
+    }
 
 }
