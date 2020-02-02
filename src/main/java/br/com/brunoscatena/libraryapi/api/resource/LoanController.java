@@ -29,7 +29,8 @@ public class LoanController {
     public Long create(@RequestBody LoanDTO dto) {
 
 	Book book = bookService.findByIsbn(dto.getIsbn())
-		.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+			"Book not found for passed ISBN"));
 
 	Loan loan = Loan.builder()
 		.book(book)

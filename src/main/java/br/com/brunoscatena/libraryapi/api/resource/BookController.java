@@ -10,10 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,8 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import br.com.brunoscatena.libraryapi.api.dto.BookDTO;
-import br.com.brunoscatena.libraryapi.api.exceptions.ApiError;
-import br.com.brunoscatena.libraryapi.exception.BusinessException;
 import br.com.brunoscatena.libraryapi.model.entity.Book;
 import br.com.brunoscatena.libraryapi.service.BookService;
 
@@ -97,16 +92,4 @@ public class BookController {
 	bookService.delete(book);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleValidationExceptions(MethodArgumentNotValidException ex) {
-	BindingResult bindingResult = ex.getBindingResult();
-	return new ApiError(bindingResult);
-    }
-
-    @ExceptionHandler(BusinessException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handlerBusinessExceptions(BusinessException ex) {
-	return new ApiError(ex);
-    }
 }

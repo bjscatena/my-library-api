@@ -7,11 +7,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +30,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.com.brunoscatena.libraryapi.exception.BusinessException;
 import br.com.brunoscatena.libraryapi.model.entity.Book;
 import br.com.brunoscatena.libraryapi.model.entity.Loan;
 import br.com.brunoscatena.libraryapi.service.BookService;
@@ -116,10 +119,39 @@ public class LoanControllerTest {
 	ResultActions resultActions = mvc.perform(request);
 
 	// Assert
-	resultActions.andExpect(status().isBadRequest());
+	resultActions.andExpect(status().isBadRequest())
+		.andExpect(jsonPath("errors", Matchers.hasSize(1)))
+		.andExpect(jsonPath("errors[0]").value("Book not found for passed ISBN"));
 
 	verify(bookService, times(1)).findByIsbn(dto.getIsbn());
 	verify(loanService, never()).save(any(Loan.class));
+
+    }
+
+    @Test
+    @DisplayName("Should throw error when loaning an already loaned book")
+    public void createLoanWihtAlreadyLoanedBookTest() throws Exception {
+
+	String isbn = "123";
+
+	LoanDTO dto = createLoanDTO(isbn);
+	String json = new ObjectMapper().writeValueAsString(dto);
+
+	Book book = Book.builder().id(1L).isbn(isbn).build();
+
+	when(bookService.findByIsbn(isbn)).thenReturn(Optional.of(book));
+	when(loanService.save(any(Loan.class)))
+		.thenThrow(new BusinessException("Book already loaned"));
+
+	MockHttpServletRequestBuilder request = createJsonPostRequest(json);
+
+	mvc.perform(request)
+		.andExpect(status().isBadRequest())
+		.andExpect(jsonPath("errors", Matchers.hasSize(1)))
+		.andExpect(jsonPath("errors[0]").value("Book already loaned"));
+
+	verify(bookService, times(1)).findByIsbn(isbn);
+	verify(loanService, times(1)).save(any(Loan.class));
 
     }
 

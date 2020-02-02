@@ -2,7 +2,9 @@ package br.com.brunoscatena.libraryapi.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -40,11 +42,11 @@ public class BookServiceTest {
     BookService bookService;
 
     @MockBean
-    BookRepository repository;
+    BookRepository bookRepository;
 
     @BeforeEach
     public void setUp() {
-	this.bookService = new BookServiceImpl(repository);
+	this.bookService = new BookServiceImpl(bookRepository);
     }
 
     private Book createValidBook() {
@@ -62,9 +64,9 @@ public class BookServiceTest {
 	// cenário
 	Book book = createValidBook();
 
-	when(repository.existsByIsbn(anyString())).thenReturn(false);
+	when(bookRepository.existsByIsbn(anyString())).thenReturn(false);
 
-	when(repository.save(book)).thenReturn(
+	when(bookRepository.save(book)).thenReturn(
 		Book.builder().id(1L).author("Bruno").title("As aventuras").isbn("1234").build());
 
 	// execução
@@ -84,7 +86,7 @@ public class BookServiceTest {
 
 	// cenário
 	Book book = createValidBook();
-	when(repository.existsByIsbn(anyString())).thenReturn(true);
+	when(bookRepository.existsByIsbn(anyString())).thenReturn(true);
 
 	// execução
 	assertThrows(BusinessException.class, () -> {
@@ -98,6 +100,7 @@ public class BookServiceTest {
 
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @DisplayName("Should find book using properties")
     public void find() {
@@ -110,7 +113,7 @@ public class BookServiceTest {
 
 	Page<Book> page = new PageImpl<Book>(books, pageReq, 1);
 
-	when(repository.findAll(any(Example.class), any(PageRequest.class))).thenReturn(page);
+	when(bookRepository.findAll(any(Example.class), any(PageRequest.class))).thenReturn(page);
 
 	// Act
 	Page<Book> result = bookService.find(book, pageReq);
@@ -131,12 +134,12 @@ public class BookServiceTest {
 	Book bookMock = createValidBook();
 	bookMock.setId(id);
 
-	when(repository.findById(id)).thenReturn(Optional.of(bookMock));
+	when(bookRepository.findById(id)).thenReturn(Optional.of(bookMock));
 
 	Optional<Book> foundBook = bookService.findById(id);
 
-	verify(repository, times(1)).findById(id);
-	verifyNoMoreInteractions(repository);
+	verify(bookRepository, times(1)).findById(id);
+	verifyNoMoreInteractions(bookRepository);
 
 	assertThat(foundBook.isPresent()).isTrue();
 	assertThat(foundBook.get().getId()).isEqualTo(bookMock.getId());
@@ -150,7 +153,7 @@ public class BookServiceTest {
     @DisplayName("Should return empty when book does not exists on database")
     public void findInexistentByIdTest() {
 	Long id = 1L;
-	when(repository.findById(id)).thenReturn(Optional.empty());
+	when(bookRepository.findById(id)).thenReturn(Optional.empty());
 	Optional<Book> returnedBook = bookService.findById(id);
 	assertThat(returnedBook.isPresent()).isFalse();
     }
@@ -161,12 +164,12 @@ public class BookServiceTest {
 
 	Book validBook = createValidBookWithId();
 
-	doNothing().when(repository).delete(validBook);
+	doNothing().when(bookRepository).delete(validBook);
 
 	assertDoesNotThrow(() -> bookService.delete(validBook));
 
-	verify(repository, times(1)).delete(validBook);
-	verifyNoMoreInteractions(repository);
+	verify(bookRepository, times(1)).delete(validBook);
+	verifyNoMoreInteractions(bookRepository);
 
     }
 
@@ -176,7 +179,7 @@ public class BookServiceTest {
 
 	Book bookWithoutId = createValidBook();
 
-	doNothing().when(repository).delete(any(Book.class));
+	doNothing().when(bookRepository).delete(any(Book.class));
 
 	assertThrows(IllegalArgumentException.class, () -> {
 	    bookService.delete(bookWithoutId);
@@ -186,14 +189,14 @@ public class BookServiceTest {
 	    bookService.delete(null);
 	});
 
-	verify(repository, never()).delete(any(Book.class));
+	verify(bookRepository, never()).delete(any(Book.class));
     }
 
     @Test
     @DisplayName("Should update book")
     public void bookUpdateTest() {
 	Book book = createValidBookWithId();
-	when(repository.save(book)).thenReturn(book);
+	when(bookRepository.save(book)).thenReturn(book);
 
 	Book updatedBook = bookService.update(book);
 
@@ -218,7 +221,34 @@ public class BookServiceTest {
 	    bookService.update(null);
 	});
 
-	verify(repository, never()).save(book);
+	verify(bookRepository, never()).save(book);
+
+    }
+
+    @Test
+    @DisplayName("Should find book by ISBN")
+    public void findByIsbnTest() {
+
+	// Arrange
+	String isbn = "123";
+
+	Book mockBook = createValidBookWithId();
+	when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.of(mockBook));
+
+	// Act
+	Optional<Book> optBook = bookService.findByIsbn(isbn);
+
+	// Assert
+	assertTrue(optBook.isPresent());
+
+	Book foundBook = optBook.get();
+
+	assertEquals(foundBook.getId(), mockBook.getId());
+	assertEquals(foundBook.getAuthor(), mockBook.getAuthor());
+	assertEquals(foundBook.getTitle(), mockBook.getTitle());
+	assertEquals(foundBook.getIsbn(), mockBook.getIsbn());
+
+	verify(bookRepository, times(1)).findByIsbn(isbn);
 
     }
 }
