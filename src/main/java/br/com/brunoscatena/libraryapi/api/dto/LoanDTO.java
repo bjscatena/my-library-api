@@ -1,4 +1,4 @@
-package br.com.brunoscatena.libraryapi.api.resource;
+package br.com.brunoscatena.libraryapi.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LoanDTO {
 
+    private Long id;
     private String isbn;
     private String customer;
+    private BookDTO book;
 
 }
