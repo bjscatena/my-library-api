@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import br.com.brunoscatena.libraryapi.api.dto.LoanFilterDTO;
 import br.com.brunoscatena.libraryapi.exception.BusinessException;
 import br.com.brunoscatena.libraryapi.model.entity.Loan;
 import br.com.brunoscatena.libraryapi.model.repository.LoanRepository;
@@ -44,9 +45,9 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
-    public Page<Loan> find(Loan loan, Pageable pageRequest) {
-	// TODO Auto-generated method stub
-	return null;
+    public Page<Loan> find(LoanFilterDTO dto, Pageable pageRequest) {
+	return loanRepository.findByBookIsbnOrCustomer(dto.getIsbn(), dto.getCustomer(),
+		pageRequest);
     }
 
 }

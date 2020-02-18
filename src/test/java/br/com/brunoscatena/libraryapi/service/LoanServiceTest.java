@@ -4,11 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,9 +20,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import br.com.brunoscatena.libraryapi.api.dto.LoanFilterDTO;
 import br.com.brunoscatena.libraryapi.exception.BusinessException;
 import br.com.brunoscatena.libraryapi.model.entity.Book;
 import br.com.brunoscatena.libraryapi.model.entity.Loan;
@@ -137,6 +145,32 @@ public class LoanServiceTest {
 	// Assert
 	assertEquals(updatedLoan.getReturned(), loan.getReturned());
 	verify(loanRepository, times(1)).save(loan);
+
+    }
+
+    @Test
+    @DisplayName("Should filter loans using properties")
+    public void findLoanTest() {
+
+	LoanFilterDTO dto = LoanFilterDTO.builder().customer("Bruno").isbn("123").build();
+	Pageable pageRequest = PageRequest.of(0, 10);
+	Book book = createValidBook();
+	Loan loan = createValidLoanWithId(book);
+
+	List<Loan> loans = Arrays.asList(loan);
+	Page<Loan> pageLoan = new PageImpl<Loan>(loans, pageRequest, loans.size());
+
+	when(loanRepository.findByBookIsbnOrCustomer(anyString(), anyString(), any(Pageable.class)))
+		.thenReturn(pageLoan);
+
+	Page<Loan> returnedPageLoan = loanService.find(dto, pageRequest);
+
+	assertEquals(returnedPageLoan.getNumberOfElements(), loans.size());
+	assertEquals(returnedPageLoan.getContent(), pageLoan.getContent());
+	assertEquals(returnedPageLoan.getPageable().getPageSize(),
+		pageLoan.getPageable().getPageSize());
+	assertEquals(returnedPageLoan.getPageable().getPageNumber(),
+		pageLoan.getPageable().getPageNumber());
 
     }
 
